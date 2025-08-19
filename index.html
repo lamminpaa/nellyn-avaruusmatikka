@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaruusmatikka - 3D Tähtikarttaseikkailu</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>🚀 Avaruusmatikka</h1>
+            <div id="score">Pisteet: <span id="score-value">0</span></div>
+            <div id="level">Taso: <span id="level-value">1</span></div>
+        </header>
+        
+        <div id="mindmap-container">
+            <div id="three-scene"></div>
+        </div>
+        
+        <div id="game-panel">
+            <div id="problem-container">
+                <h2>Ratkaise tehtävä päästäksesi eteenpäin:</h2>
+                <div id="problem"></div>
+                <input type="number" id="answer-input" placeholder="Vastaus">
+                <button id="submit-answer">Lähetä vastaus</button>
+            </div>
+            
+            <div id="feedback"></div>
+            
+            <div id="progress-info">
+                <p>Oikeat vastaukset vievät sinut uusiin tähtiin! ⭐</p>
+                <div id="gravity-legend">
+                    <h3>Gravitaatio näyttää vaikeusasteen:</h3>
+                    <div class="legend-item">🟢 Vihreä = Helppo</div>
+                    <div class="legend-item">🟡 Keltainen = Keskitaso</div>
+                    <div class="legend-item">🟠 Oranssi = Haastava</div>
+                    <div class="legend-item">🔴 Punainen = Vaikea</div>
+                    <div class="legend-item">🟣 Violetti = Mestari</div>
+                </div>
+                <div id="pirate-info">
+                    <h3>🏴‍☠️ Avaruusmerirosvot:</h3>
+                    <div class="legend-item">💎 Syövät planeettojen älypölyä</div>
+                    <div class="legend-item">⚔️ Vaikeuttavat peliä lähestyessään</div>
+                    <div class="legend-item">🛡️ Älypöly pakenee merirosvoilta</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="script3d.js"></script>
+</body>
+</html>
