@@ -16,6 +16,7 @@ class MathSpace3DGame {
         };
         this.gameStartTime = Date.now();
         this.dustWarningShown = false;
+        this.gameInitialized = false;
         
         this.mindMapData = this.generateAdaptiveMindMapStructure();
         this.stars = [];
@@ -40,6 +41,11 @@ class MathSpace3DGame {
         
         this.bindEvents();
         this.animate();
+        
+        // Mark game as initialized after a short delay
+        setTimeout(() => {
+            this.gameInitialized = true;
+        }, 2000);
     }
     
     initializeElements() {
@@ -777,6 +783,9 @@ class MathSpace3DGame {
     }
     
     checkPiratePlayerInteractions() {
+        // Don't check interactions until game is fully initialized
+        if (!this.gameInitialized) return;
+        
         const currentStarData = this.stars.find(s => s.node.id === this.currentNode);
         if (!currentStarData) return;
         

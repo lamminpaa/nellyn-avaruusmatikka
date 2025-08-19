@@ -290,6 +290,8 @@ function getMinimalHTML() {
         </div>
     </div>
     
+    <div id="version-info">v1.1.0</div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
     <script>
         // Try to load the full script3d.js, fallback to simple version

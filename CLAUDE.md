@@ -1,0 +1,1 @@
+- Voisiko pelin versio näkyä jossain alakulmassa niin tietää että uusin versio on käytössä
