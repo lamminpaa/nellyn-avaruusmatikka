@@ -210,7 +210,8 @@ class MathSpace3DGame {
             suggestions.push(...this.generateBalancedTopics(fromNode, playerStrength, playerWeaknesses));
         }
         
-        return suggestions.slice(0, Math.min(3, 2 + Math.floor(playerStrength.overall * 3)));
+        // Return only ONE planet per correct answer
+        return suggestions.slice(0, 1);
     }
     
     getAvailableTopics() {
@@ -232,37 +233,37 @@ class MathSpace3DGame {
     
     generateEasierTopics(fromNode, weaknesses) {
         const easierTopics = this.getAvailableTopics().filter(t => t.difficulty <= 2);
-        return this.selectReinforcingTopics(easierTopics, weaknesses, 2);
+        return this.selectReinforcingTopics(easierTopics, weaknesses, 1);
     }
     
     generateHarderTopics(fromNode, playerStrength) {
         const harderTopics = this.getAvailableTopics().filter(t => t.difficulty >= 4);
-        return this.selectChallengingTopics(harderTopics, playerStrength, 2);
+        return this.selectChallengingTopics(harderTopics, playerStrength, 1);
     }
     
     generateBalancedTopics(fromNode, playerStrength, weaknesses) {
         const allTopics = this.getAvailableTopics();
-        const balanced = [];
         
+        // If player has weaknesses, reinforce them
         if (weaknesses.length > 0) {
             const reinforcing = this.selectReinforcingTopics(allTopics, weaknesses, 1);
             if (reinforcing.length > 0) {
-                balanced.push(reinforcing[0]);
+                return reinforcing;
             }
         }
         
+        // Otherwise, choose appropriate difficulty level
         const currentLevel = Math.floor(2 + playerStrength.overall * 4);
         const levelTopics = allTopics.filter(t => 
             t.difficulty === currentLevel || t.difficulty === currentLevel + 1
-        ).slice(0, 2);
+        ).slice(0, 1);
         
-        balanced.push(...levelTopics);
-        
-        if (balanced.length === 0) {
-            balanced.push(...allTopics.filter(t => t.difficulty <= 3).slice(0, 2));
+        if (levelTopics.length > 0) {
+            return levelTopics;
         }
         
-        return balanced;
+        // Fallback to moderate difficulty
+        return allTopics.filter(t => t.difficulty <= 3).slice(0, 1);
     }
     
     identifyWeaknesses() {
@@ -1314,11 +1315,12 @@ class MathSpace3DGame {
             console.log('After regeneration - available connections:', availableConnections);
             
             if (availableConnections.length > 0) {
-                const nextNode = availableConnections[Math.floor(Math.random() * availableConnections.length)];
+                // Since we only generate one planet, just take the first (and only) connection
+                const nextNode = availableConnections[0];
                 this.currentNode = nextNode;
                 this.visitedNodes.add(nextNode);
                 
-                this.feedbackElement.textContent = "🌌 Uusia planeettoja löydetty! Seikkailu jatkuu!";
+                this.feedbackElement.textContent = "🌌 Uusi planeetta löydetty! Seikkailu jatkuu!";
                 this.feedbackElement.className = "feedback-correct";
                 
                 setTimeout(() => {
