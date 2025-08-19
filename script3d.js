@@ -297,7 +297,7 @@ class MathSpace3DGame {
     
     createGravitySystem() {
         this.mindMapData.forEach(node => {
-            const difficultyLevel = this.getNodeDifficultyLevel(node.label);
+            const difficultyLevel = this.getNodeDifficultyLevel(node);
             const gravityStrength = difficultyLevel;
             
             const particleCount = Math.min(15, 5 + (difficultyLevel * 2));
@@ -391,20 +391,37 @@ class MathSpace3DGame {
         });
     }
     
-    getNodeDifficultyLevel(label) {
+    getNodeDifficultyLevel(nodeOrLabel) {
+        // Jos parametri on node-objekti, käytä sen difficulty-propertyä tai labeliä
+        const label = typeof nodeOrLabel === 'string' ? nodeOrLabel : nodeOrLabel.label;
+        const nodeDifficulty = typeof nodeOrLabel === 'object' ? nodeOrLabel.difficulty : null;
+        
+        // Jos nodella on suoraan difficulty-property, käytä sitä
+        if (nodeDifficulty !== null && nodeDifficulty !== undefined) {
+            return nodeDifficulty;
+        }
+        
+        // Muuten käytä labeliin perustuvaa logiikkaa
         switch(label) {
             case "Aloitus":
                 return 1;
             case "Yhteenlasku":
             case "Vähennyslasku":
+            case "Pienluvut":
+            case "Suuremmat luvut":
                 return 2;
             case "Perus+":
             case "Perus-":
                 return 3;
             case "Isommat+":
             case "Isommat-":
+            case "Kertotaulu 2x":
+            case "Kertotaulu 5x":
+            case "Kertotaulu 10x":
                 return 4;
             case "Kertotaulu":
+            case "Kertotaulu 3x":
+            case "Kertotaulu 4x":
             case "Jakolasku":
                 return 4;
             case "Murto-osat":
@@ -412,9 +429,10 @@ class MathSpace3DGame {
                 return 5;
             case "Matemestari":
             case "Laskutaitaja":
+            case "Sekamuoto":
                 return 6;
             default:
-                return 1;
+                return 2; // Oletuksena keskitaso
         }
     }
     
@@ -432,7 +450,8 @@ class MathSpace3DGame {
     
     createIntelligentDust() {
         this.mindMapData.forEach(node => {
-            if (this.getNodeDifficultyLevel(node.label) >= 2) {
+            const difficultyLevel = this.getNodeDifficultyLevel(node);
+            if (difficultyLevel >= 1) {
                 const dustCount = Math.min(this.maxDustPerPlanet, 5 + Math.random() * 3);
                 
                 for (let i = 0; i < dustCount; i++) {
