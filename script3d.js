@@ -17,6 +17,7 @@ class MathSpace3DGame {
         this.gameStartTime = Date.now();
         this.dustWarningShown = false;
         this.gameInitialized = false;
+        this.nextNodeId = 1;
         
         this.mindMapData = this.generateAdaptiveMindMapStructure();
         this.stars = [];
@@ -137,7 +138,7 @@ class MathSpace3DGame {
     
     generateNextPlanets(existingNodes) {
         const nodes = [...existingNodes];
-        let nodeId = existingNodes.length;
+        let nodeId = this.nextNodeId;
         
         const lastNode = existingNodes[existingNodes.length - 1];
         const playerStrength = this.calculatePlayerStrength();
@@ -176,6 +177,7 @@ class MathSpace3DGame {
             console.log('Generated planet:', newNode.label);
         });
         
+        this.nextNodeId = nodeId; // Päivitä seuraava vapaa ID
         this.connectNodes(nodes);
         console.log('Final nodes after connection:', nodes.map(n => ({id: n.id, label: n.label, connections: n.connections})));
         return nodes;
