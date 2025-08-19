@@ -305,7 +305,7 @@ function getMinimalHTML() {
         </div>
     </div>
     
-    <div id="version-info">v1.2.0</div>
+    <div id="version-info">v1.2.1</div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
     <script>

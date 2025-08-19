@@ -20,6 +20,8 @@ class MathSpace3DGame {
         this.nextNodeId = 1;
         this.defensePoints = 0;
         this.planetDefenses = new Map(); // nodeId -> defense info
+        this.tasksCompleted = 0; // Tasks completed on current planet
+        this.tasksRequired = 3; // Tasks needed before moving to next planet
         
         this.mindMapData = this.generateAdaptiveMindMapStructure();
         this.stars = [];
@@ -1278,8 +1280,9 @@ class MathSpace3DGame {
         const totalScore = baseScore + dustBonus;
         
         this.score += totalScore;
-        this.defensePoints += Math.floor(totalScore / 20); // Convert some score to defense points
+        this.defensePoints += Math.floor(totalScore / 10); // More generous defense points
         this.scoreElement.textContent = this.score;
+        this.tasksCompleted++; // Increment tasks completed on this planet
         this.updateDefenseUI();
         
         let message = "Oikein! 🎉 Loistavaa!";
@@ -1287,18 +1290,39 @@ class MathSpace3DGame {
             message += ` +${dustBonus} älypölybonusta!`;
         }
         
-        this.feedbackElement.textContent = message;
-        this.feedbackElement.className = "feedback-correct";
-        
-        this.scareAwayPirates();
-        this.animateStarSuccess();
-        this.moveToNextNode();
-        
-        setTimeout(() => {
-            this.feedbackElement.textContent = "";
-            this.feedbackElement.className = "";
-            this.generateNewProblem();
-        }, 1500);
+        // Check if enough tasks completed to move to next planet
+        if (this.tasksCompleted >= this.tasksRequired) {
+            message += ` 🚀 Valmis seuraavalle planeetalle! (${this.tasksCompleted}/${this.tasksRequired})`;
+            this.feedbackElement.textContent = message;
+            this.feedbackElement.className = "feedback-correct";
+            
+            this.scareAwayPirates();
+            this.animateStarSuccess();
+            this.moveToNextNode();
+            
+            // Reset task counter for new planet
+            this.tasksCompleted = 0;
+            
+            setTimeout(() => {
+                this.feedbackElement.textContent = "";
+                this.feedbackElement.className = "";
+                this.generateNewProblem();
+            }, 1500);
+        } else {
+            message += ` 📚 Tehtäviä suoritettu: ${this.tasksCompleted}/${this.tasksRequired}`;
+            this.feedbackElement.textContent = message;
+            this.feedbackElement.className = "feedback-correct";
+            
+            this.scareAwayPirates();
+            this.animateStarSuccess();
+            
+            // Generate new problem for current planet (don't move to next node)
+            setTimeout(() => {
+                this.feedbackElement.textContent = "";
+                this.feedbackElement.className = "";
+                this.generateNewProblem();
+            }, 1500);
+        }
     }
     
     updatePlayerStats(correct) {
@@ -1466,6 +1490,9 @@ class MathSpace3DGame {
                 
                 // Initialize defense for new planet
                 this.initializePlanetDefense(nextNode);
+                
+                // Reset task counter for new planet
+                this.tasksCompleted = 0;
                 
                 this.feedbackElement.textContent = "🌌 Uusi planeetta löydetty! Seikkailu jatkuu!";
                 this.feedbackElement.className = "feedback-correct";
