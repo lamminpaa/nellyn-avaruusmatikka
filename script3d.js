@@ -296,6 +296,7 @@ class MathSpace3DGame {
                 if (parent) {
                     if (!parent.connections) parent.connections = [];
                     parent.connections.push(node.id);
+                    console.log(`Connected node ${node.id} (${node.label}) to parent ${parent.id} (${parent.label})`);
                 }
             }
         });
@@ -1270,6 +1271,7 @@ class MathSpace3DGame {
             currentNode: this.currentNode,
             currentNodeData: currentNodeData,
             availableConnections,
+            visitedNodes: Array.from(this.visitedNodes),
             allNodes: this.mindMapData.map(n => ({id: n.id, label: n.label, connections: n.connections}))
         });
         
