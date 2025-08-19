@@ -18,6 +18,8 @@ class MathSpace3DGame {
         this.dustWarningShown = false;
         this.gameInitialized = false;
         this.nextNodeId = 1;
+        this.defensePoints = 0;
+        this.planetDefenses = new Map(); // nodeId -> defense info
         
         this.mindMapData = this.generateAdaptiveMindMapStructure();
         this.stars = [];
@@ -26,6 +28,8 @@ class MathSpace3DGame {
         this.floatingParticles = [];
         this.spacePirates = [];
         this.intelligentDust = [];
+        this.defenseTurrets = [];
+        this.defenseDrones = [];
         this.pirateSpawnTimer = 0;
         this.maxPirates = 2;
         this.maxDustPerPlanet = 8;
@@ -47,6 +51,9 @@ class MathSpace3DGame {
         setTimeout(() => {
             this.gameInitialized = true;
         }, 2000);
+        
+        // Initialize defense for starting planet
+        this.initializePlanetDefense(0);
     }
     
     initializeElements() {
@@ -57,6 +64,15 @@ class MathSpace3DGame {
         this.submitButton = document.getElementById('submit-answer');
         this.feedbackElement = document.getElementById('feedback');
         this.container = document.getElementById('three-scene');
+        
+        // Defense UI elements
+        this.defensePointsElement = document.getElementById('defense-points-value');
+        this.turretCountElement = document.getElementById('turret-count');
+        this.droneCountElement = document.getElementById('drone-count');
+        this.shieldLevelElement = document.getElementById('shield-level');
+        this.buildTurretBtn = document.getElementById('build-turret');
+        this.buildDroneBtn = document.getElementById('build-drone');
+        this.upgradeShieldsBtn = document.getElementById('upgrade-shields');
     }
     
     init3DScene() {
@@ -303,6 +319,132 @@ class MathSpace3DGame {
                 }
             }
         });
+    }
+    
+    initializePlanetDefense(nodeId) {
+        const node = this.mindMapData.find(n => n.id === nodeId);
+        if (!node) return;
+        
+        // Initialize basic defense stats
+        this.planetDefenses.set(nodeId, {
+            shields: 0,           // Energy shields level (0-3)
+            turrets: 0,          // Defense turret count (0-5) 
+            drones: 0,           // Patrol drone count (0-3)
+            shieldStrength: 0,   // Current shield energy
+            maxShieldStrength: 0,
+            turretPower: 0,      // Turret damage level
+            droneEfficiency: 0   // Drone patrol effectiveness
+        });
+        
+        console.log(`Initialized defense for planet ${nodeId} (${node.label})`);
+    }
+    
+    createDefenseTurret(nodeId, position) {
+        const node = this.mindMapData.find(n => n.id === nodeId);
+        if (!node) return null;
+        
+        // Turret base
+        const turretGroup = new THREE.Group();
+        
+        const baseGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.2, 8);
+        const baseMaterial = new THREE.MeshPhongMaterial({
+            color: 0x4A4A4A,
+            emissive: 0x222222
+        });
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        
+        // Turret barrel
+        const barrelGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.8, 6);
+        const barrelMaterial = new THREE.MeshPhongMaterial({
+            color: 0x666666,
+            emissive: 0x111111
+        });
+        const barrel = new THREE.Mesh(barrelGeometry, barrelMaterial);
+        barrel.rotation.z = Math.PI / 2;
+        barrel.position.y = 0.1;
+        
+        turretGroup.add(base);
+        turretGroup.add(barrel);
+        
+        // Position turret around planet
+        turretGroup.position.copy(position);
+        
+        turretGroup.userData = {
+            type: 'turret',
+            nodeId: nodeId,
+            health: 100,
+            damage: 25,
+            range: 8,
+            fireRate: 1000, // ms between shots
+            lastFire: 0,
+            target: null,
+            active: true
+        };
+        
+        this.defenseTurrets.push(turretGroup);
+        this.scene.add(turretGroup);
+        
+        return turretGroup;
+    }
+    
+    createDefenseDrone(nodeId) {
+        const node = this.mindMapData.find(n => n.id === nodeId);
+        if (!node) return null;
+        
+        const droneGroup = new THREE.Group();
+        
+        // Drone body
+        const bodyGeometry = new THREE.SphereGeometry(0.15, 8, 6);
+        const bodyMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00AA00,
+            emissive: 0x002200
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        
+        // Drone wings/propellers
+        for (let i = 0; i < 4; i++) {
+            const wingGeometry = new THREE.BoxGeometry(0.4, 0.02, 0.08);
+            const wingMaterial = new THREE.MeshPhongMaterial({
+                color: 0x666666,
+                transparent: true,
+                opacity: 0.7
+            });
+            const wing = new THREE.Mesh(wingGeometry, wingMaterial);
+            wing.rotation.z = (i * Math.PI / 2);
+            wing.position.y = 0.02;
+            droneGroup.add(wing);
+        }
+        
+        droneGroup.add(body);
+        
+        // Starting position around planet
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 4 + Math.random() * 2;
+        droneGroup.position.set(
+            node.x + Math.cos(angle) * radius,
+            node.y + (Math.random() - 0.5) * 2,
+            node.z + Math.sin(angle) * radius
+        );
+        
+        droneGroup.userData = {
+            type: 'drone',
+            nodeId: nodeId,
+            health: 50,
+            speed: 0.03,
+            patrolRadius: 6,
+            homeX: node.x,
+            homeY: node.y,
+            homeZ: node.z,
+            target: null,
+            patrolAngle: angle,
+            active: true,
+            attackPower: 15
+        };
+        
+        this.defenseDrones.push(droneGroup);
+        this.scene.add(droneGroup);
+        
+        return droneGroup;
     }
     
     createGravitySystem() {
@@ -1136,7 +1278,9 @@ class MathSpace3DGame {
         const totalScore = baseScore + dustBonus;
         
         this.score += totalScore;
+        this.defensePoints += Math.floor(totalScore / 20); // Convert some score to defense points
         this.scoreElement.textContent = this.score;
+        this.updateDefenseUI();
         
         let message = "Oikein! 🎉 Loistavaa!";
         if (dustBonus > 0) {
@@ -1320,6 +1464,9 @@ class MathSpace3DGame {
                 this.currentNode = nextNode;
                 this.visitedNodes.add(nextNode);
                 
+                // Initialize defense for new planet
+                this.initializePlanetDefense(nextNode);
+                
                 this.feedbackElement.textContent = "🌌 Uusi planeetta löydetty! Seikkailu jatkuu!";
                 this.feedbackElement.className = "feedback-correct";
                 
@@ -1331,6 +1478,7 @@ class MathSpace3DGame {
                 this.updateStarMaterials();
                 this.animateCameraToCurrentStar();
                 this.updateConnections();
+                this.updateDefenseUI(); // Update defense UI for new planet
             } else {
                 this.feedbackElement.textContent = "🏆 Onnittelut! Olet saavuttanut galaksin lopun!";
                 this.feedbackElement.className = "feedback-correct";
@@ -1542,6 +1690,140 @@ class MathSpace3DGame {
             this.feedbackElement.textContent = "";
             this.feedbackElement.className = "";
         });
+        
+        // Defense control events
+        this.buildTurretBtn.addEventListener('click', () => this.buildDefenseTurret());
+        this.buildDroneBtn.addEventListener('click', () => this.buildDefenseDrone());
+        this.upgradeShieldsBtn.addEventListener('click', () => this.upgradeShields());
+    }
+    
+    updateDefenseUI() {
+        this.defensePointsElement.textContent = this.defensePoints;
+        
+        const currentDefense = this.planetDefenses.get(this.currentNode);
+        if (currentDefense) {
+            this.turretCountElement.textContent = currentDefense.turrets;
+            this.droneCountElement.textContent = currentDefense.drones;
+            this.shieldLevelElement.textContent = currentDefense.shields;
+        }
+        
+        // Update button states
+        this.buildTurretBtn.disabled = this.defensePoints < 5 || (currentDefense && currentDefense.turrets >= 5);
+        this.buildDroneBtn.disabled = this.defensePoints < 3 || (currentDefense && currentDefense.drones >= 3);
+        this.upgradeShieldsBtn.disabled = this.defensePoints < 7 || (currentDefense && currentDefense.shields >= 3);
+    }
+    
+    buildDefenseTurret() {
+        const cost = 5;
+        if (this.defensePoints < cost) return;
+        
+        const currentDefense = this.planetDefenses.get(this.currentNode);
+        if (!currentDefense || currentDefense.turrets >= 5) return;
+        
+        // Find planet position
+        const node = this.mindMapData.find(n => n.id === this.currentNode);
+        if (!node) return;
+        
+        // Create turret position around planet
+        const angle = (currentDefense.turrets / 5) * Math.PI * 2;
+        const turretPosition = new THREE.Vector3(
+            node.x + Math.cos(angle) * 2.5,
+            node.y + 0.5,
+            node.z + Math.sin(angle) * 2.5
+        );
+        
+        // Create the turret
+        const turret = this.createDefenseTurret(this.currentNode, turretPosition);
+        if (turret) {
+            this.defensePoints -= cost;
+            currentDefense.turrets++;
+            currentDefense.turretPower += 25;
+            this.updateDefenseUI();
+            
+            this.feedbackElement.textContent = "🏗️ Puolustustorni rakennettu!";
+            this.feedbackElement.className = "feedback-correct";
+            setTimeout(() => {
+                this.feedbackElement.textContent = "";
+                this.feedbackElement.className = "";
+            }, 1500);
+        }
+    }
+    
+    buildDefenseDrone() {
+        const cost = 3;
+        if (this.defensePoints < cost) return;
+        
+        const currentDefense = this.planetDefenses.get(this.currentNode);
+        if (!currentDefense || currentDefense.drones >= 3) return;
+        
+        // Create the drone
+        const drone = this.createDefenseDrone(this.currentNode);
+        if (drone) {
+            this.defensePoints -= cost;
+            currentDefense.drones++;
+            currentDefense.droneEfficiency += 15;
+            this.updateDefenseUI();
+            
+            this.feedbackElement.textContent = "🤖 Puolustusdrone rakennettu!";
+            this.feedbackElement.className = "feedback-correct";
+            setTimeout(() => {
+                this.feedbackElement.textContent = "";
+                this.feedbackElement.className = "";
+            }, 1500);
+        }
+    }
+    
+    upgradeShields() {
+        const cost = 7;
+        if (this.defensePoints < cost) return;
+        
+        const currentDefense = this.planetDefenses.get(this.currentNode);
+        if (!currentDefense || currentDefense.shields >= 3) return;
+        
+        this.defensePoints -= cost;
+        currentDefense.shields++;
+        currentDefense.maxShieldStrength += 100;
+        currentDefense.shieldStrength = currentDefense.maxShieldStrength;
+        this.updateDefenseUI();
+        
+        // Create visual shield effect
+        this.createShieldEffect(this.currentNode);
+        
+        this.feedbackElement.textContent = "🛡️ Energiakilvet päivitetty!";
+        this.feedbackElement.className = "feedback-correct";
+        setTimeout(() => {
+            this.feedbackElement.textContent = "";
+            this.feedbackElement.className = "";
+        }, 1500);
+    }
+    
+    createShieldEffect(nodeId) {
+        const node = this.mindMapData.find(n => n.id === nodeId);
+        if (!node) return;
+        
+        const shieldGeometry = new THREE.SphereGeometry(3, 16, 16);
+        const shieldMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00FFFF,
+            transparent: true,
+            opacity: 0.2,
+            wireframe: false
+        });
+        
+        const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
+        shield.position.set(node.x, node.y, node.z);
+        
+        shield.userData = {
+            type: 'shield',
+            nodeId: nodeId,
+            pulsePhase: 0
+        };
+        
+        this.scene.add(shield);
+        
+        // Remove shield effect after a few seconds
+        setTimeout(() => {
+            this.scene.remove(shield);
+        }, 3000);
     }
 }
 
