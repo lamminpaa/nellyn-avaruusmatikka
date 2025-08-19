@@ -1,0 +1,25 @@
+{
+  "name": "nellyn-avaruusmatikka",
+  "version": "1.0.0",
+  "description": "Dynaaminen 3D-matikkapeli avaruusseikkailu",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler preview"
+  },
+  "keywords": [
+    "mathematics",
+    "game",
+    "3d",
+    "education",
+    "adaptive-learning",
+    "threejs",
+    "cloudflare-workers"
+  ],
+  "author": "Kalle Lamminpää",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
