@@ -1,13 +1,4 @@
 name = "nellyn-avaruusmatikka"
 main = "index.js"
 compatibility_date = "2023-12-01"
-
-[env.production]
-routes = [
-  { pattern = "avaruusmatikka.tunk.io/*", zone_name = "tunk.io" }
-]
-
-[[env.production.kv_namespaces]]
-binding = "GAME_DATA"
-id = "your-kv-namespace-id"
-preview_id = "your-kv-preview-id"
+account_id = "4afa9a2ef256ff7f1cec9ed91ff03561"
